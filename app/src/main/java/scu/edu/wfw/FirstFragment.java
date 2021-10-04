@@ -2,7 +2,9 @@ package scu.edu.wfw;
 
 import static androidx.constraintlayout.motion.utils.Oscillator.TAG;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.icu.text.IDNA;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,7 +22,9 @@ import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 
 import com.alibaba.fastjson.JSON;
@@ -41,20 +45,25 @@ import scu.edu.wfw.databinding.FragmentFirstBinding;
 public class FirstFragment extends Fragment {
 
     private FragmentFirstBinding binding;
+    private SharedPreferences preferences;
+    SharedPreferences.Editor editor;
 
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-
+        preferences = getContext().getSharedPreferences("config", Context.MODE_PRIVATE);
+        editor = preferences.edit();
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         return binding.getRoot();
 
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        WebView.setWebContentsDebuggingEnabled(true);
         WebView webView = binding.webView;
         webView.loadUrl("https://wfw.scu.edu.cn/ncov/wap/default/index");
         WebSettings webSettings = webView.getSettings();
@@ -71,7 +80,7 @@ public class FirstFragment extends Fragment {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 String ur = request.getUrl().toString();
-                if (ur.contains("ipLocation")) {
+                if (preferences.getBoolean("isIntercept", false) && ur.contains("ipLocation")) {
                     StringBuilder stringBuilder = new StringBuilder();
                     BufferedReader bufferedReader = null;
                     try {
@@ -104,19 +113,18 @@ public class FirstFragment extends Fragment {
                     Matcher matcher = pattern.matcher(temps);
                     if (matcher.matches()) {
                         JSONObject jsonObject = JSON.parseObject(matcher.group(2));
-                        //104.092372,30.635226
-                        jsonObject.put("lng", "104.092372");
-                        jsonObject.put("lat", "30.635226");
+                        //104.092372,30.635226 四川大学望江校区
+                        jsonObject.put("lng", getFixPoint("lng"));
+                        jsonObject.put("lat", getFixPoint("lat"));
                         temps = matcher.group(1) + jsonObject.toJSONString() + matcher.group(3);
                     } else {
                         temps = "";
                     }
 
 
-                    WebResourceResponse webResourceResponse = new WebResourceResponse("application/javascript",
+                    return new WebResourceResponse("application/javascript",
                             "utf-8",
                             new ByteArrayInputStream(temps.getBytes()));
-                    return webResourceResponse;
 
                 }
                 return super.shouldInterceptRequest(view, request);
@@ -135,18 +143,37 @@ public class FirstFragment extends Fragment {
                 callback.invoke(origin, true, false);
             }
         });
+//        ((SwitchCompat) getActivity().findViewById(R.id.custom_switch)).setChecked(preferences.getBoolean("isIntercept", false));
     }
 
-    public void logout_click(MenuItem item) {
+    public String getFixPoint(String name) {
+        if (name.equals("lng")) {
+            return String.valueOf(Float.parseFloat(preferences.getString("lng", "104.065901")));
+        } else {
+            return String.valueOf(Float.parseFloat(preferences.getString("lat", "30.635226")));
+        }
+    }
+
+    public void logout_click(Object item) {
         binding.webView.loadUrl("https://wfw.scu.edu.cn/uc/wap/login/logout?redirect=https://wfw.scu.edu.cn/site/center/personal");
     }
 
-    public void load_click(MenuItem item) {
+    public void load_click(Object item) {
         binding.webView.evaluateJavascript(
                 "const currentdate = vm.info.date;\n" +
                         "vm.info = vm.oldInfo;\n" +
                         "vm.info.date = currentdate;\n"
                 , null);
+    }
+
+    public void custom_click(Object item) {
+        NavHostFragment.findNavController(FirstFragment.this)
+                .navigate(R.id.action_FirstFragment_to_SecondFragment);
+    }
+
+    public void custom_location_switch(Object item) {
+        editor.putBoolean("isIntercept", ((SwitchCompat) item).isChecked());
+        editor.commit();
     }
 
 

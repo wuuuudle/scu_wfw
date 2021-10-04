@@ -2,12 +2,10 @@
     <string name="app_name">四川大学健康打卡</string>
     <string name="load_info">载入昨日数据</string>
     <string name="logout">退出账号</string>
+    <string name="custom_location">自定义定位</string>
+    <string name="custom_location_switch">定位拦截</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">四川大学健康打卡</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="second_fragment_label">自定义定位</string>
+    <string name="location">(经度:%1f,纬度:%2f)</string>
 </resources>
