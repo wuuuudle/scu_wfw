@@ -1,15 +1,21 @@
 package scu.edu.wfw;
 
+import static androidx.constraintlayout.motion.utils.Oscillator.TAG;
+
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.util.Log;
 import android.view.View;
 
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -17,6 +23,8 @@ import scu.edu.wfw.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
     }
 
     @Override
@@ -52,17 +61,28 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    public void logout_click(MenuItem item) {
+        Fragment mMainNavFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+        Fragment fragment = mMainNavFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+        if (fragment instanceof FirstFragment) {
+            ((FirstFragment) fragment).logout_click(item);
+        }
+    }
+
+    public void load_click(MenuItem item) {
+        Fragment mMainNavFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+        Fragment fragment = mMainNavFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+        if (fragment instanceof FirstFragment) {
+            ((FirstFragment) fragment).load_click(item);
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
     }
