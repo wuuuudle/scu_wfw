@@ -1,7 +1,5 @@
 package scu.edu.wfw;
 
-import static androidx.constraintlayout.motion.utils.Oscillator.TAG;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,18 +9,17 @@ import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -31,15 +28,15 @@ import scu.edu.wfw.databinding.ActivityMainBinding;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.RelativeLayout;
-import android.widget.Switch;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -75,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         methods.put(R.id.load_data, "load_click");
         methods.put(R.id.custom_location, "custom_click");
         methods.put(R.id.custom_switch, "custom_location_switch");
-        String allPermission[] = new String[]{
+        String permissions[] = new String[]{
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.INTERNET,
@@ -84,40 +81,27 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_PHONE_STATE
         };
-        Arrays.stream(allPermission)
-                .filter((String permission) -> !isGranted(permission))
-                .filter((String permission) -> !ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
-                .forEach((String permission) -> {
-                    ActivityCompat.requestPermissions(this, new String[]{permission}, 1);
-                });
+        List<String> mPermissionList = new ArrayList<>();
 
-//        requestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 1);
-//        Manifest.permission.ACCESS_COARSE_LOCATION
-    }
-
-    private boolean isMarshmallow() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-    }
-
-    private boolean isGranted_(String permission) {
-        int checkSelfPermission = ActivityCompat.checkSelfPermission(this, permission);
-        return checkSelfPermission == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public boolean isGranted(String permission) {
-        return !isMarshmallow() || isGranted_(permission);
-    }
-
-    private void requestPermission(String permission, int requestCode) {
-        if (!isGranted(permission)) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+        final int mRequestCode = 100;//权限请求码
+        //逐个判断你要的权限是否已经通过
+        for (int i = 0; i < permissions.length; i++) {
+            if (ContextCompat.checkSelfPermission(this, permissions[i]) != PackageManager.PERMISSION_GRANTED) {
+                mPermissionList.add(permissions[i]);//添加还未授予的权限
             }
-        } else {
-            //直接执行相应操作了
         }
+
+        //申请权限
+        if (mPermissionList.size() > 0) {//有权限没有通过，需要申请
+            ActivityCompat.requestPermissions(this, permissions, mRequestCode);
+        } else {
+            //说明权限都已经通过，可以做你想做的事情去
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
