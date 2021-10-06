@@ -2,8 +2,11 @@ package scu.edu.wfw;
 
 import static androidx.constraintlayout.motion.utils.Oscillator.TAG;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -14,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
@@ -31,9 +35,11 @@ import android.widget.Switch;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +75,49 @@ public class MainActivity extends AppCompatActivity {
         methods.put(R.id.load_data, "load_click");
         methods.put(R.id.custom_location, "custom_click");
         methods.put(R.id.custom_switch, "custom_location_switch");
+        String allPermission[] = new String[]{
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_PHONE_STATE
+        };
+        Arrays.stream(allPermission)
+                .filter((String permission) -> !isGranted(permission))
+                .filter((String permission) -> !ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
+                .forEach((String permission) -> {
+                    ActivityCompat.requestPermissions(this, new String[]{permission}, 1);
+                });
+
+//        requestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 1);
+//        Manifest.permission.ACCESS_COARSE_LOCATION
+    }
+
+    private boolean isMarshmallow() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+    }
+
+    private boolean isGranted_(String permission) {
+        int checkSelfPermission = ActivityCompat.checkSelfPermission(this, permission);
+        return checkSelfPermission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public boolean isGranted(String permission) {
+        return !isMarshmallow() || isGranted_(permission);
+    }
+
+    private void requestPermission(String permission, int requestCode) {
+        if (!isGranted(permission)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+            }
+        } else {
+            //直接执行相应操作了
+        }
     }
 
     @Override

@@ -120,12 +120,53 @@ public class FirstFragment extends Fragment {
                     } else {
                         temps = "";
                     }
-
-
                     return new WebResourceResponse("application/javascript",
                             "utf-8",
                             new ByteArrayInputStream(temps.getBytes()));
+                } else if (preferences.getBoolean("isIntercept", false) && ur.contains("restapi.amap.com/v3/assistant/coordinate/convert")) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    BufferedReader bufferedReader = null;
+                    try {
+                        URL url = new URL(ur);
+                        HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
+                        httpsURLConnection.setConnectTimeout(10 * 1000);
+                        httpsURLConnection.setReadTimeout(40 * 1000);
+                        bufferedReader = new BufferedReader(new
+                                InputStreamReader(httpsURLConnection
+                                .getInputStream()));
+                        String line = "";
+                        while ((line = bufferedReader.readLine()) != null) {
+                            stringBuilder.append(line);
 
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (bufferedReader != null) {
+                            try {
+                                bufferedReader.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    }
+                    String temps = stringBuilder.toString();
+                    Pattern pattern = Pattern.compile("(jsonp.*?\\()(.*?)(\\).*)");
+                    Matcher matcher = pattern.matcher(temps);
+                    if (matcher.matches()) {
+                        JSONObject jsonObject = JSON.parseObject(matcher.group(2));
+                        //104.092372,30.635226 四川大学望江校区
+                        jsonObject.put("locations", String.format("%s,%s", getFixPoint("lng"), getFixPoint("lat")));
+//                        jsonObject.put("lng", getFixPoint("lng"));
+//                        jsonObject.put("lat", getFixPoint("lat"));
+                        temps = matcher.group(1) + jsonObject.toJSONString() + matcher.group(3);
+                    } else {
+                        temps = "";
+                    }
+                    return new WebResourceResponse("application/javascript",
+                            "utf-8",
+                            new ByteArrayInputStream(temps.getBytes()));
                 }
                 return super.shouldInterceptRequest(view, request);
             }
